@@ -148,13 +148,19 @@ impl Cargo {
         Ok(artifacts)
     }
 
-    pub fn build(&self, target: CompileTarget, target_dir: &Path) -> Result<CargoBuild> {
+    pub fn build(
+        &self,
+        target: CompileTarget,
+        target_dir: &Path,
+        tys: impl IntoIterator<Item = CrateType>,
+    ) -> Result<CargoBuild> {
         CargoBuild::new(
             target,
             &self.features,
             self.package_root(),
             target_dir,
             self.offline,
+            tys,
         )
     }
 
@@ -246,6 +252,7 @@ impl CargoBuild {
         root_dir: &Path,
         target_dir: &Path,
         offline: bool,
+        tys: impl IntoIterator<Item = CrateType>,
     ) -> Result<Self> {
         let triple = if target.is_host()? {
             None
@@ -254,7 +261,13 @@ impl CargoBuild {
         };
         let mut cmd = Command::new("cargo");
         cmd.current_dir(root_dir);
-        cmd.arg("build");
+        cmd.arg("rustc");
+        cmd.arg("--crate-type").arg(
+            tys.into_iter()
+                .map(CrateType::cargo_arg)
+                .collect::<Vec<_>>()
+                .join(","),
+        );
         cmd.arg("--target-dir").arg(target_dir);
         if target.opt() == Opt::Release {
             cmd.arg("--release");

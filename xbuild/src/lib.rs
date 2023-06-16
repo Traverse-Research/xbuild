@@ -733,8 +733,13 @@ impl BuildEnv {
         }
     }
 
-    pub fn cargo_build(&self, target: CompileTarget, target_dir: &Path) -> Result<CargoBuild> {
-        let mut cargo = self.cargo.build(target, target_dir)?;
+    pub fn cargo_build(
+        &self,
+        target: CompileTarget,
+        target_dir: &Path,
+        tys: impl IntoIterator<Item = CrateType>,
+    ) -> Result<CargoBuild> {
+        let mut cargo = self.cargo.build(target, target_dir, tys)?;
         if target.platform() == Platform::Linux {
             cargo.add_link_arg("-Wl,-rpath");
             cargo.add_link_arg("-Wl,$ORIGIN/lib");
