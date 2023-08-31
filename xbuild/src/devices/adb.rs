@@ -276,6 +276,8 @@ impl Adb {
             .arg("-T")
             .arg(format!("'{}'", last_timestamp))
             .arg(format!("--uid={}", uid))
+            .arg("-v")
+            .arg("color")
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .spawn()?;
@@ -390,7 +392,7 @@ impl Adb {
         let uid = self.uidof(device, package)?;
         let logcat = self.logcat(device, uid, &last_timestamp)?;
         for line in logcat {
-            println!("{}", line);
+            print!("{}", line);
         }
         Ok(())
     }
