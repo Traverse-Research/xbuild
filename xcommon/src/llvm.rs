@@ -42,7 +42,8 @@ pub fn list_needed_libs_recursively(
                     to_copy.insert(path.clone());
                     artifacts.push(path);
                 } else {
-                    bail!("Shared library `{}` not found", need);
+                    // bail!("Shared library `{}` not found", need);
+                    println!("Shared library `{}` not found", need);
                 }
             }
         }
