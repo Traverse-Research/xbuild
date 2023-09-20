@@ -57,15 +57,3 @@ pub enum CrateType {
     Staticlib,
     Cdylib,
 }
-
-impl CrateType {
-    /// The argument passed to `--crate-type`: <https://rust-lang.github.io/rfcs/3180-cargo-cli-crate-type.html>
-    pub fn cargo_arg(self) -> &'static str {
-        match self {
-            CrateType::Bin => "bin",
-            CrateType::Lib => "lib",
-            CrateType::Staticlib => "staticlib",
-            CrateType::Cdylib => "cdylib",
-        }
-    }
-}

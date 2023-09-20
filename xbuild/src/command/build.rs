@@ -34,12 +34,7 @@ pub fn build(env: &BuildEnv) -> Result<()> {
         }
         for target in env.target().compile_targets() {
             let arch_dir = platform_dir.join(target.arch().to_string());
-            let mut cargo = env.cargo_build(
-                target,
-                &arch_dir.join("cargo"),
-                // TODO: Create this list based on the targets below!
-                [CrateType::Cdylib],
-            )?;
+            let mut cargo = env.cargo_build(target, &arch_dir.join("cargo"))?;
             if !bin_target {
                 cargo.arg("--lib");
             }
