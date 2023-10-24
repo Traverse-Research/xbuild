@@ -468,7 +468,11 @@ pub fn extract_zip(archive: &Path, directory: &Path) -> Result<()> {
 }
 
 pub fn extract_zip_file(archive: &Path, name: &str) -> Result<Vec<u8>> {
-    let mut archive = ZipArchive::new(File::open(archive)?)?;
+    let mut archive = ZipArchive::new(
+        File::open(archive)
+            .with_context(|| format!("Failed to open zip archive {}", archive.display()))?,
+    )
+    .with_context(|| format!("Failed to read zip archive {}", archive.display()))?;
     let mut f = archive.by_name(name)?;
     let mut buf = Vec::with_capacity(f.size() as usize);
     f.read_to_end(&mut buf)?;
