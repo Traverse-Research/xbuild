@@ -305,14 +305,19 @@ pub fn build(env: &BuildEnv) -> Result<()> {
                         ZipFileOptions::Compressed,
                     )?;
 
+                    // TODO: Investigate use-cases for `.dll`s in MSIX (Rust compiles static self-contained binaries)
                     if has_lib {
-                        let lib =
-                            env.cargo_artefact(&arch_dir.join("cargo"), target, CrateType::Cdylib)?;
-                        msix.add_file(
-                            &lib,
-                            Path::new(lib.file_name().unwrap()),
-                            ZipFileOptions::Compressed,
-                        )?;
+                        match env.cargo_artefact(&arch_dir.join("cargo"), target, CrateType::Cdylib)
+                        {
+                            Ok(lib) => msix.add_file(
+                                &lib,
+                                Path::new(lib.file_name().unwrap()),
+                                ZipFileOptions::Compressed,
+                            )?,
+                            Err(e) => log::error!(
+                                "Failed to retrieve library artifact, skipping `.dll`: {e:?}"
+                            ),
+                        }
                     }
 
                     msix.finish(env.target().signer().cloned())?;
