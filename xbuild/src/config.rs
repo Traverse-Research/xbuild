@@ -4,6 +4,7 @@ use anyhow::{Context, Result};
 use apk::manifest::{Activity, AndroidManifest, IntentFilter, MetaData};
 use apk::VersionCode;
 use appbundle::InfoPlist;
+use msix::manifest::{Application, ApplicationKind};
 use msix::AppxManifest;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -274,11 +275,12 @@ impl Config {
             .get_or_insert_with(|| "10.11".to_string());
 
         // windows
-        self.windows
-            .manifest
-            .properties
-            .display_name
-            .get_or_insert_with(|| manifest_package.name.clone());
+        // self.windows
+        //     .manifest
+        //     .properties
+        //     .display_name
+        // This is not a "friendly display name"
+        //     .get_or_insert_with(|| manifest_package.name.clone());
         // TODO: Pass package name etc
         // self.windows
         //     .manifest
@@ -286,12 +288,42 @@ impl Config {
         //     .version
         //     .get_or_insert(package_version);
         assert!(self.windows.manifest.identity.version.is_empty());
-        self.windows.manifest.identity.version = package_version;
+        // Windows wants a.b.c.d:
+        self.windows.manifest.identity.version = format!("{}.0", package_version);
         self.windows
             .manifest
             .properties
             .description
             .get_or_insert(package_description);
+
+        if self
+            .windows
+            .manifest
+            .dependencies
+            .target_device_family
+            .is_empty()
+        {
+            let def = Default::default();
+            log::info!("No target device family configured. Using default {def:?}");
+            self.windows
+                .manifest
+                .dependencies
+                .target_device_family
+                .push(def);
+        }
+
+        if self.windows.manifest.applications.application.is_empty() {
+            let app = Application {
+                // TODO: Model XOR of these fields and StartPage
+                // kind: ApplicationKind::Executable {
+                executable: Some(format!("{}.exe", manifest_package.name)),
+                entry_point: Some("windows.fullTrustApplication".into()),
+                // },
+                ..Default::default()
+            };
+            log::info!("No target device family configured. Using default {app:?}");
+            self.windows.manifest.applications.application.push(app);
+        }
 
         Ok(())
     }

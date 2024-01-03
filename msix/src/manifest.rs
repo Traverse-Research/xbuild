@@ -1,10 +1,11 @@
 //! <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/generate-package-manifest>
-
+//!
+//! <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/schema-root>
 use anyhow::Result;
 use serde::ser::{SerializeTuple, Serializer};
 use serde::{Deserialize, Serialize};
 
-/// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/schema-root>
+/// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-package>
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(
     rename = "Package",
@@ -23,10 +24,13 @@ pub struct AppxManifest {
     ns_rescap: String,
     pub identity: Identity,
     pub properties: Properties,
+    #[serde(default)] // Not optional, but the only nested array may be empty
     pub resources: Resources,
+    #[serde(default)] // Required, but default is provided by xbuild
     pub dependencies: Dependencies,
-    #[serde(serialize_with = "serialize_element")]
+    #[serde(default, serialize_with = "serialize_element")]
     pub capabilities: Vec<Capability>,
+    #[serde(default)] // Required, but default is provided by xbuild
     pub applications: Applications,
 }
 
@@ -46,22 +50,29 @@ impl Default for AppxManifest {
     }
 }
 
+/// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-applications>
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Applications {
+    /// 1-100 elements
     pub application: Vec<Application>,
 }
 
+/// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-resources>
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Resources {
+    /// 0 - 200 elements
     pub resource: Vec<Resource>,
 }
 
+/// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-dependencies>
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Dependencies {
+    /// 1 - 128 elements
     pub target_device_family: Vec<TargetDeviceFamily>,
+    // pub package_dependency: Vec<>,
 }
 /// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-identity>
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -74,16 +85,17 @@ pub struct Identity {
     // pub processor_architecture: ResourceId<String>,
 }
 
+/// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-properties>
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Properties {
     #[serde(serialize_with = "serialize_element")]
-    pub display_name: Option<String>,
+    pub display_name: String,
     #[serde(serialize_with = "serialize_element")]
-    pub publisher_display_name: Option<String>,
+    pub publisher_display_name: String,
     #[serde(serialize_with = "serialize_element")]
-    pub logo: Option<String>,
-    #[serde(serialize_with = "serialize_element")]
+    pub logo: String,
+    #[serde(default, serialize_with = "serialize_element")]
     pub description: Option<String>,
 }
 
@@ -92,14 +104,20 @@ where
     S: Serializer,
 {
     let mut tuple = serializer.serialize_tuple(1)?;
+    // TODO: Skip if None!
     tuple.serialize_element(value)?;
     tuple.end()
 }
 
+/// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-resource>
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Resource {
-    pub language: String,
+    pub language: Option<String>,
+    #[serde(rename(serialize = "uap:Scale"))]
+    pub scale: Option<u32>,
+    #[serde(rename(serialize = "uap:DXFeatureLevel"))]
+    pub dx_feature_level: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -114,55 +132,71 @@ impl Default for TargetDeviceFamily {
     fn default() -> Self {
         Self {
             name: "Windows.Desktop".into(),
-            min_version: "10.0.0.0".into(),
+            // Add-AppxPackage : Deployment failed with HRESULT: 0x80080204, The Appx package's manifest is invalid.                   error 0x80080204: App manifest validation error: Line 1, Column 619, Reason: A <Resource> element is required for       packages targeting OS version 10.0.16299.0 or earlier.
+            min_version: "10.0.16300.0".into(),
             max_version_tested: "10.0.20348.0".into(),
         }
     }
 }
 
+/// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-capabilities>
 #[derive(Clone, Debug, Deserialize, Serialize)]
-// #[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub enum Capability {
+    /// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-capability>
     #[serde(rename(deserialize = "capability"))]
-    #[serde(rename(serialize = "Capability"))]
-    Capability {
-        #[serde(rename(serialize = "Name"))]
-        name: String,
-    },
+    Capability { name: String },
+    /// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-rescap-capability>
     #[serde(rename(deserialize = "restricted"))]
     #[serde(rename(serialize = "rescap:Capability"))]
-    Restricted {
-        #[serde(rename(serialize = "Name"))]
-        name: String,
-    },
+    Restricted { name: String },
+    /// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-devicecapability>
     #[serde(rename(deserialize = "device"))]
     #[serde(rename(serialize = "DeviceCapability"))]
-    Device {
-        #[serde(rename(serialize = "Name"))]
-        name: String,
-    },
+    Device { name: String },
+    // TODO: uap:Capability and mobile:Capability
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(untagged, deny_unknown_fields, rename_all(serialize = "PascalCase"))]
+pub enum ApplicationKind {
+    #[default]
+    Broken,
+    Executable {
+        executable: String,
+        entry_point: String,
+    },
+    StartPage {
+        ///  The web page that handles the extensibility point.
+        start_page: String,
+    },
+}
+
+/// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-application>
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Application {
-    pub id: Option<String>,
+    pub id: String,
+    // #[serde(flatten)]
+    // pub kind: ApplicationKind,
     pub executable: Option<String>,
     pub entry_point: Option<String>,
     #[serde(rename(serialize = "uap:VisualElements"))]
     pub visual_elements: VisualElements,
 }
 
+/// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-uap-visualelements>
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct VisualElements {
-    pub background_color: Option<String>,
-    pub display_name: Option<String>,
-    pub description: Option<String>,
+    pub display_name: String,
+    pub description: String,
+    pub background_color: String,
     #[serde(rename(serialize = "Square150x150Logo"))]
-    pub logo_150x150: Option<String>,
+    pub logo_150x150: String,
     #[serde(rename(serialize = "Square44x44Logo"))]
-    pub logo_44x44: Option<String>,
+    pub logo_44x44: String,
+
     #[serde(rename(serialize = "uap:DefaultTile"))]
     pub default_tile: Option<DefaultTile>,
     #[serde(rename(serialize = "uap:SplashScreen"))]

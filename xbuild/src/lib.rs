@@ -764,6 +764,7 @@ impl BuildEnv {
         }
         if target.platform() == Platform::Windows {
             let sdk = self.windows_sdk();
+            dbg!(&sdk, sdk.exists());
             if sdk.exists() {
                 cargo.use_windows_sdk(&sdk)?;
             }

@@ -232,6 +232,7 @@ impl Cargo {
     }
 }
 
+#[derive(Debug)]
 pub struct CargoBuild {
     cmd: Command,
     target: CompileTarget,
@@ -320,6 +321,7 @@ impl CargoBuild {
         self.add_lib_dir(&path.join("crt").join("lib").join("x86_64"));
         self.add_lib_dir(&path.join("sdk").join("lib").join("um").join("x86_64"));
         self.add_lib_dir(&path.join("sdk").join("lib").join("ucrt").join("x86_64"));
+        dbg!(&self);
         Ok(())
     }
 

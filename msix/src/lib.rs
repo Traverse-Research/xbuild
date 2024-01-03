@@ -49,6 +49,7 @@ impl Msix {
     }
 
     pub fn add_icon(&mut self, path: &Path) -> Result<()> {
+        dbg!(&path);
         let mut scaler = Scaler::open(path)?;
         scaler.optimize();
         let images = Path::new("Images");
@@ -62,6 +63,7 @@ impl Msix {
                     .build();
                 scaler.write(&mut Cursor::new(&mut buf), opts)?;
                 let name = format!("{}.scale-{}.png", base_name, (scale * 100.0) as u32);
+                dbg!(&name);
                 self.zip
                     .create_file(&images.join(name), ZipFileOptions::Unaligned, &buf)?;
             }
@@ -83,6 +85,8 @@ impl Msix {
     }
 
     pub fn finish(mut self, signer: Option<Signer>) -> Result<()> {
+        dbg!(&self.manifest);
+        dbg!(quick_xml::se::to_string(&self.manifest)?);
         self.zip.create_file(
             "AppxManifest.xml".as_ref(),
             ZipFileOptions::Compressed,
@@ -156,7 +160,7 @@ impl Msix {
     }
 }
 
-fn to_xml<T: Serialize>(xml: &T, standalone: bool) -> Vec<u8> {
+fn to_xml<T: Serialize + std::fmt::Debug>(xml: &T, standalone: bool) -> Vec<u8> {
     let mut buf = vec![];
     let standalone = if standalone { "yes" } else { "no" };
     buf.extend_from_slice(
@@ -166,6 +170,8 @@ fn to_xml<T: Serialize>(xml: &T, standalone: bool) -> Vec<u8> {
         )
         .as_bytes(),
     );
+    // dbg!(&xml);
     quick_xml::se::to_writer(&mut buf, xml).unwrap();
+    // dbg!(&buf);
     buf
 }

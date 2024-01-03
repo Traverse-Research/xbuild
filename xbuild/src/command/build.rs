@@ -295,7 +295,12 @@ pub fn build(env: &BuildEnv) -> Result<()> {
                         target.opt() != Opt::Debug,
                     )?;
                     if let Some(icon) = env.icon() {
+                        dbg!(icon);
                         msix.add_icon(icon)?;
+                        assert_eq!(
+                            &env.config.windows().manifest.properties.logo,
+                            "Images/StoreLogo.scale-100.png",
+                        );
                     }
                     // TODO: *.pri
 
