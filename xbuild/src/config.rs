@@ -279,11 +279,14 @@ impl Config {
             .properties
             .display_name
             .get_or_insert_with(|| manifest_package.name.clone());
-        self.windows
-            .manifest
-            .identity
-            .version
-            .get_or_insert(package_version);
+        // TODO: Pass package name etc
+        // self.windows
+        //     .manifest
+        //     .identity
+        //     .version
+        //     .get_or_insert(package_version);
+        assert!(self.windows.manifest.identity.version.is_empty());
+        self.windows.manifest.identity.version = package_version;
         self.windows
             .manifest
             .properties

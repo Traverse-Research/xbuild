@@ -1,9 +1,16 @@
+//! <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/generate-package-manifest>
+
 use anyhow::Result;
 use serde::ser::{SerializeTuple, Serializer};
 use serde::{Deserialize, Serialize};
 
+/// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/schema-root>
 #[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename = "Package")]
+#[serde(
+    rename = "Package",
+    deny_unknown_fields,
+    rename_all(serialize = "PascalCase")
+)]
 pub struct AppxManifest {
     #[serde(rename(serialize = "xmlns"))]
     #[serde(default = "default_namespace")]
@@ -14,18 +21,12 @@ pub struct AppxManifest {
     #[serde(rename(serialize = "xmlns:rescap"))]
     #[serde(default = "default_rescap_namespace")]
     ns_rescap: String,
-    #[serde(rename(serialize = "Identity"))]
     pub identity: Identity,
-    #[serde(rename(serialize = "Properties"))]
     pub properties: Properties,
-    #[serde(rename(serialize = "Resources"))]
     pub resources: Resources,
-    #[serde(rename(serialize = "Dependencies"))]
     pub dependencies: Dependencies,
-    #[serde(rename(serialize = "Capabilities"))]
     #[serde(serialize_with = "serialize_element")]
     pub capabilities: Vec<Capability>,
-    #[serde(rename(serialize = "Applications"))]
     pub applications: Applications,
 }
 
@@ -46,47 +47,42 @@ impl Default for AppxManifest {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Applications {
-    #[serde(rename(serialize = "Application"))]
     pub application: Vec<Application>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Resources {
-    #[serde(rename(serialize = "Resource"))]
     pub resource: Vec<Resource>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Dependencies {
-    #[serde(rename(serialize = "TargetDeviceFamily"))]
     pub target_device_family: Vec<TargetDeviceFamily>,
 }
-
+/// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-identity>
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Identity {
-    #[serde(rename(serialize = "Name"))]
-    pub name: Option<String>,
-    #[serde(rename(serialize = "Version"))]
-    pub version: Option<String>,
-    #[serde(rename(serialize = "Publisher"))]
-    pub publisher: Option<String>,
-    #[serde(rename(serialize = "ProcessorArchitecture"))]
+    pub name: String,
+    pub version: String,
+    pub publisher: String,
     pub processor_architecture: Option<String>,
+    // pub processor_architecture: ResourceId<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Properties {
-    #[serde(rename(serialize = "DisplayName"))]
     #[serde(serialize_with = "serialize_element")]
     pub display_name: Option<String>,
-    #[serde(rename(serialize = "PublisherDisplayName"))]
     #[serde(serialize_with = "serialize_element")]
     pub publisher_display_name: Option<String>,
-    #[serde(rename(serialize = "Logo"))]
     #[serde(serialize_with = "serialize_element")]
     pub logo: Option<String>,
-    #[serde(rename(serialize = "Description"))]
     #[serde(serialize_with = "serialize_element")]
     pub description: Option<String>,
 }
@@ -101,19 +97,17 @@ where
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Resource {
-    #[serde(rename(serialize = "Language"))]
     pub language: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct TargetDeviceFamily {
-    #[serde(rename(serialize = "Name"))]
     pub name: String,
-    #[serde(rename(serialize = "MinVersion"))]
     pub min_version: String,
-    #[serde(rename(serialize = "MaxVersionTested"))]
-    pub max_version: String,
+    pub max_version_tested: String,
 }
 
 impl Default for TargetDeviceFamily {
@@ -121,12 +115,13 @@ impl Default for TargetDeviceFamily {
         Self {
             name: "Windows.Desktop".into(),
             min_version: "10.0.0.0".into(),
-            max_version: "10.0.20348.0".into(),
+            max_version_tested: "10.0.20348.0".into(),
         }
     }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+// #[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub enum Capability {
     #[serde(rename(deserialize = "capability"))]
     #[serde(rename(serialize = "Capability"))]
@@ -149,24 +144,20 @@ pub enum Capability {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Application {
-    #[serde(rename(serialize = "Id"))]
     pub id: Option<String>,
-    #[serde(rename(serialize = "Executable"))]
     pub executable: Option<String>,
-    #[serde(rename(serialize = "EntryPoint"))]
     pub entry_point: Option<String>,
     #[serde(rename(serialize = "uap:VisualElements"))]
     pub visual_elements: VisualElements,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct VisualElements {
-    #[serde(rename(serialize = "BackgroundColor"))]
     pub background_color: Option<String>,
-    #[serde(rename(serialize = "DisplayName"))]
     pub display_name: Option<String>,
-    #[serde(rename(serialize = "Description"))]
     pub description: Option<String>,
     #[serde(rename(serialize = "Square150x150Logo"))]
     pub logo_150x150: Option<String>,
@@ -181,8 +172,8 @@ pub struct VisualElements {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct DefaultTile {
-    #[serde(rename(serialize = "ShortName"))]
     pub short_name: Option<String>,
     #[serde(rename(serialize = "Square71x71Logo"))]
     pub logo_71x71: Option<String>,
@@ -201,22 +192,21 @@ pub struct ShowNameOnTiles {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct ShowOn {
-    #[serde(rename(serialize = "Tile"))]
     pub tile: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct SplashScreen {
-    #[serde(rename(serialize = "Image"))]
     pub image: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct LockScreen {
-    #[serde(rename(serialize = "BadgeLogo"))]
     pub badge_logo: String,
-    #[serde(rename(serialize = "Notification"))]
     pub notification: String,
 }
 
@@ -253,11 +243,9 @@ mod tests {
     fn test_manifest() {
         let manifest = AppxManifest {
             identity: Identity {
-                name: Some("com.flutter.fluttertodoapp".into()),
-                version: Some("1.0.0.0".into()),
-                publisher: Some(
-                    "CN=Msix Testing, O=Msix Testing Corporation, S=Some-State, C=US".into(),
-                ),
+                name: "com.flutter.fluttertodoapp".into(),
+                version: "1.0.0.0".into(),
+                publisher: "CN=Msix Testing, O=Msix Testing Corporation, S=Some-State, C=US".into(),
                 processor_architecture: Some("x64".into()),
             },
             properties: Properties {

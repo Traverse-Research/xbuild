@@ -3,8 +3,7 @@ use serde::{Deserialize, Serialize, Serializer};
 
 /// Android [manifest element](https://developer.android.com/guide/topics/manifest/manifest-element), containing an [`Application`] element.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(rename = "manifest")]
-#[serde(deny_unknown_fields)]
+#[serde(rename = "manifest", deny_unknown_fields)]
 pub struct AndroidManifest {
     #[serde(rename(serialize = "xmlns:android"))]
     #[serde(default = "default_namespace")]
@@ -128,7 +127,7 @@ pub struct IntentFilter {
     #[serde(default)]
     pub actions: Vec<String>,
     /// Serialize as vector of structs for proper xml formatting
-    #[serde(serialize_with = "serialize_catergories")]
+    #[serde(serialize_with = "serialize_categories")]
     #[serde(rename(serialize = "category"))]
     #[serde(default)]
     pub categories: Vec<String>,
@@ -156,7 +155,7 @@ where
     seq.end()
 }
 
-fn serialize_catergories<S>(categories: &[String], serializer: S) -> Result<S::Ok, S::Error>
+fn serialize_categories<S>(categories: &[String], serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
