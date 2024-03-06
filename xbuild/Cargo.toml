@@ -7,7 +7,7 @@ repository = "https://github.com/rust-mobile/xbuild"
 license = "Apache-2.0 OR MIT"
 
 [dependencies]
-android-sdkmanager-rs = "0.5.0"
+android-sdkmanager-rs = { version = "0.6.0", features = ["native-certs"] }
 anyhow = "1.0.68"
 apk = { version = "0.4.0", path = "../apk" }
 appbundle = { version = "0.3.0", path = "../appbundle" }
