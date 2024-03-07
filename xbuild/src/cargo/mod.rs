@@ -386,10 +386,21 @@ impl CargoBuild {
     fn cargo_target_env(&mut self, name: &str, value: &str) {
         if let Some(triple) = self.triple {
             let utarget = triple.replace('-', "_");
-            let env = format!("CARGO_TARGET_{}_{}", &utarget, name);
+            let env = format!("CARGO_TARGET_{}_{}", utarget, name);
             self.cmd.env(env.to_uppercase(), value);
         } else {
             self.cmd.env(name, value);
+        }
+    }
+
+    /// Configures a cargo target specific environment variable.
+    fn bindgen_env(&mut self, value: &str) {
+        if let Some(triple) = self.triple {
+            let utarget = triple.replace('-', "_");
+            let env = format!("BINDGEN_EXTRA_CLANG_ARGS_{}", utarget);
+            self.cmd.env(env, value);
+        } else {
+            self.cmd.env("BINDGEN_EXTRA_CLANG_ARGS", value);
         }
     }
 
@@ -469,6 +480,7 @@ impl CargoBuild {
         // self.cargo_target_env("ENCODED_RUSTFLAGS", &self.rust_flags.join(SEP));
         self.cmd
             .env("CARGO_ENCODED_RUSTFLAGS", &self.rust_flags.join(SEP));
+        self.bindgen_env(&self.c_flags.clone());
         self.cc_triple_env("CFLAGS", &self.c_flags.clone());
         // These strings already end with a space if they're non-empty:
         self.cc_triple_env("CXXFLAGS", &format!("{}{}", self.c_flags, self.cxx_flags));
