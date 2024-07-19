@@ -17,6 +17,18 @@ macro_rules! exe {
     };
 }
 
+#[macro_export]
+macro_rules! bat {
+    ($name:expr) => {
+        if cfg!(target_os = "windows") {
+            concat!($name, ".bat")
+        } else {
+            $name
+        }
+    };
+}
+
+
 pub mod cargo;
 pub mod command;
 mod config;
@@ -701,6 +713,10 @@ impl BuildEnv {
             .join("platforms")
             .join(format!("android-{}", self.target_sdk_version()))
             .join("android.jar")
+    }
+
+    pub fn gradle(&self) -> PathBuf {
+        self.cache_dir().join("Gradle")
     }
 
     pub fn windows_sdk(&self) -> PathBuf {

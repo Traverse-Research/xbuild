@@ -98,7 +98,7 @@ impl<'a> DownloadManager<'a> {
             } else if name.ends_with(".zip") {
                 let archive = self.env().cache_dir().join("download").join(name);
                 self.download(&item.url, &archive)?;
-                xcommon::extract_zip(&archive, item.output.parent().unwrap())?;
+                xcommon::extract_zip(&archive, &item.output)?;
             } else {
                 self.download(&item.url, &item.output)?;
             }
@@ -140,6 +140,7 @@ impl<'a> DownloadManager<'a> {
                 self.macos_sdk()?;
             }
             Platform::Android => {
+                self.gradle()?;
                 self.android_ndk()?;
                 self.android_jar()?;
             }
@@ -251,6 +252,15 @@ impl<'a> DownloadManager<'a> {
             )
         }
         Ok(())
+    }
+
+    pub fn gradle(&self) -> Result<()> {
+        let output = self.env.gradle();
+        let mut item = WorkItem::new(output, "https://services.gradle.org/distributions/gradle-8.9-bin.zip".to_string());
+        if !cfg!(target_os = "linux") {
+            item.no_symlinks();
+        }
+        self.fetch(item)
     }
 
     pub fn windows_sdk(&self) -> Result<()> {
