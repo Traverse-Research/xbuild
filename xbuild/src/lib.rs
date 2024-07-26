@@ -17,6 +17,17 @@ macro_rules! exe {
     };
 }
 
+#[macro_export]
+macro_rules! bat {
+    ($name:expr) => {
+        if cfg!(target_os = "windows") {
+            concat!($name, ".bat")
+        } else {
+            $name
+        }
+    };
+}
+
 pub mod cargo;
 pub mod command;
 mod config;
