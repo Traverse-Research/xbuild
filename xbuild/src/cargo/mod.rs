@@ -305,6 +305,10 @@ impl CargoBuild {
         Ok(())
     }
 
+    pub fn use_android_jar(&mut self, path: &Path) {
+        self.cmd.env("XBUILD_ANDROID_JAR", &path);
+    }
+
     pub fn use_windows_sdk(&mut self, path: &Path) -> Result<()> {
         let path = dunce::canonicalize(path)?;
         self.cfg_tool(Tool::Cc, "clang-cl");
