@@ -73,6 +73,8 @@ pub struct Application {
     pub icon: Option<String>,
     #[serde(rename(serialize = "android:label"))]
     pub label: Option<String>,
+    #[serde(rename(serialize = "android:usesCleartextTraffic"))]
+    pub uses_cleartext_traffic: Option<bool>,
     #[serde(rename(serialize = "android:appComponentFactory"))]
     pub app_component_factory: Option<String>,
     #[serde(rename(serialize = "meta-data"))]
