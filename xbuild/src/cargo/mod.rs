@@ -456,7 +456,7 @@ impl CargoBuild {
     }
 
     pub fn set_sysroot(&mut self, path: &Path) {
-        let arg = format!("--sysroot={}", path.display());
+        let arg = format!("--sysroot=\"{}\"", path.display());
         self.add_cflag(&arg);
         self.add_link_arg(&arg);
     }
@@ -480,10 +480,24 @@ impl CargoBuild {
     }
 
     pub fn exec(mut self) -> Result<()> {
-        // TODO: CARGO_ENCODED_RUSTFLAGS doesn't support this?
-        // self.cargo_target_env("ENCODED_RUSTFLAGS", &self.rust_flags.join(SEP));
-        self.cmd
-            .env("CARGO_ENCODED_RUSTFLAGS", &self.rust_flags.join(SEP));
+        if !self.rust_flags.is_empty() {
+            let rustflags =
+                toml::to_string(&self.rust_flags).expect("serializing a string should never fail");
+
+            let mut cargo_args: Vec<String> = vec![];
+
+            cargo_args.push("--config".into());
+            if let Some(triple) = self.triple {
+                cargo_args.push(format!("target.{}.rustflags={}", triple, rustflags));
+            } else {
+                cargo_args.push(format!("build.rustflags={}", rustflags));
+            }
+
+            self.cmd.args(cargo_args);
+        }
+
+        self.cmd.env("CC_SHELL_ESCAPED_FLAGS", "1");
+
         self.bindgen_env(&self.c_flags.clone());
         self.cc_triple_env("CFLAGS", &self.c_flags.clone());
         // These strings already end with a space if they're non-empty:
