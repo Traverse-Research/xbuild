@@ -117,6 +117,9 @@ pub struct Activity {
     pub intent_filters: Vec<IntentFilter>,
     #[serde(rename(serialize = "android:colorMode"))]
     pub color_mode: Option<String>,
+    #[serde(rename(serialize = "android:immersive"))]
+    #[serde(default)]
+    pub immersive: Option<bool>,
 }
 
 /// Android [intent filter element](https://developer.android.com/guide/topics/manifest/intent-filter-element).
