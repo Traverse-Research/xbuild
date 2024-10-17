@@ -167,7 +167,7 @@ impl Cargo {
     pub fn artifact(
         &self,
         target_dir: &Path,
-        target: CompileTarget,
+        target: &CompileTarget,
         artifact: Option<Artifact>,
         ty: CrateType,
     ) -> Result<PathBuf> {
@@ -193,7 +193,7 @@ impl Cargo {
     pub fn lib_search_paths(
         &self,
         target_dir: &Path,
-        target: CompileTarget,
+        target: &CompileTarget,
     ) -> Result<Vec<PathBuf>> {
         let arch_dir = if target.is_host()? {
             target_dir.to_path_buf()

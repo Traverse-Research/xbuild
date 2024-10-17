@@ -36,10 +36,11 @@ mod download;
 mod gradle;
 mod task;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Opt {
     Debug,
     Release,
+    Profile(String),
 }
 
 impl std::fmt::Display for Opt {
@@ -47,6 +48,7 @@ impl std::fmt::Display for Opt {
         match self {
             Self::Debug => write!(f, "debug"),
             Self::Release => write!(f, "release"),
+            Self::Profile(profile) => write!(f, "{profile}"),
         }
     }
 }
@@ -194,18 +196,18 @@ impl std::str::FromStr for Format {
 }
 
 impl Format {
-    pub fn platform_default(platform: Platform, opt: Opt, gradle: bool) -> Self {
+    pub fn platform_default(platform: Platform, opt: &Opt, gradle: bool) -> Self {
         match (platform, opt) {
             (Platform::Android, Opt::Release) if gradle => Self::Aab,
             (Platform::Android, _) => Self::Apk,
             (Platform::Ios, Opt::Debug) => Self::Appbundle,
-            (Platform::Ios, Opt::Release) => Self::Ipa,
+            (Platform::Ios, _) => Self::Ipa,
             (Platform::Linux, Opt::Debug) => Self::Appdir,
-            (Platform::Linux, Opt::Release) => Self::Appimage,
+            (Platform::Linux, _) => Self::Appimage,
             (Platform::Macos, Opt::Debug) => Self::Appbundle,
-            (Platform::Macos, Opt::Release) => Self::Dmg,
+            (Platform::Macos, _) => Self::Dmg,
             (Platform::Windows, Opt::Debug) => Self::Exe,
-            (Platform::Windows, Opt::Release) => Self::Exe, // TODO: Msix
+            (Platform::Windows, _) => Self::Exe, // TODO: Msix
         }
     }
 
@@ -261,7 +263,7 @@ impl std::str::FromStr for Store {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CompileTarget {
     platform: Platform,
     arch: Arch,
@@ -277,19 +279,19 @@ impl CompileTarget {
         }
     }
 
-    pub fn platform(self) -> Platform {
+    pub fn platform(&self) -> Platform {
         self.platform
     }
 
-    pub fn arch(self) -> Arch {
+    pub fn arch(&self) -> Arch {
         self.arch
     }
 
-    pub fn opt(self) -> Opt {
-        self.opt
+    pub fn opt(&self) -> Opt {
+        self.opt.clone()
     }
 
-    pub fn android_abi(self) -> apk::Target {
+    pub fn android_abi(&self) -> apk::Target {
         assert_eq!(self.platform(), Platform::Android);
         match self.arch() {
             Arch::Arm64 => apk::Target::Arm64V8a,
@@ -298,7 +300,7 @@ impl CompileTarget {
     }
 
     /// Returns the triple used by the non-LLVM parts of the NDK
-    pub fn ndk_triple(self) -> &'static str {
+    pub fn ndk_triple(&self) -> &'static str {
         assert_eq!(self.platform(), Platform::Android);
         match self.arch() {
             Arch::Arm64 => "aarch64-linux-android",
@@ -308,7 +310,7 @@ impl CompileTarget {
         }
     }
 
-    pub fn rust_triple(self) -> Result<&'static str> {
+    pub fn rust_triple(&self) -> Result<&'static str> {
         Ok(match (self.arch, self.platform) {
             (Arch::Arm64, Platform::Android) => "aarch64-linux-android",
             (Arch::Arm64, Platform::Ios) => "aarch64-apple-ios",
@@ -326,7 +328,7 @@ impl CompileTarget {
         })
     }
 
-    pub fn is_host(self) -> Result<bool> {
+    pub fn is_host(&self) -> Result<bool> {
         Ok(self.platform() == Platform::host()? && self.arch() == Arch::host()?)
     }
 }
@@ -386,11 +388,14 @@ impl CargoArgs {
 #[derive(Parser)]
 pub struct BuildTargetArgs {
     /// Build artifacts in debug mode, without optimizations
-    #[clap(long, conflicts_with = "release")]
+    #[clap(long, conflicts_with = "release", conflicts_with = "profile")]
     debug: bool,
     /// Build artifacts in release mode, with optimizations
-    #[clap(long, short, conflicts_with = "debug")]
+    #[clap(long, short, conflicts_with = "debug", conflicts_with = "profile")]
     release: bool,
+    /// Build artifacts with the specified profile
+    #[clap(long, conflicts_with = "debug", conflicts_with = "release")]
+    profile: Option<String>,
     /// Build artifacts for target platform. Can be one of
     /// `android`, `ios`, `linux`, `macos` or `windows`.
     #[clap(long, conflicts_with = "device")]
@@ -471,18 +476,28 @@ impl BuildTargetArgs {
         } else {
             anyhow::bail!("--arch, --store or --device must be provided");
         };
-        let opt = if self.release || (!self.debug && self.store.is_some()) {
+
+        let opt = if let Some(profile) = self.profile {
+            if profile == "release" {
+                Opt::Release
+            } else if profile == "debug" {
+                Opt::Debug
+            } else {
+                Opt::Profile(profile)
+            }
+        } else if self.release || (!self.debug && self.store.is_some()) {
             Opt::Release
         } else {
             Opt::Debug
         };
+
         let format = if let Some(format) = self.format {
             format
         } else if store == Some(Store::Play) {
             Format::Aab
         } else {
             let user_wants_gradle = config.android().gradle.unwrap_or(false);
-            Format::platform_default(platform, opt, user_wants_gradle)
+            Format::platform_default(platform, &opt, user_wants_gradle)
         };
 
         let android_gradle = config.android().gradle.unwrap_or(format == Format::Aab);
@@ -537,8 +552,8 @@ pub struct BuildTarget {
 }
 
 impl BuildTarget {
-    pub fn opt(&self) -> Opt {
-        self.opt
+    pub fn opt(&self) -> &Opt {
+        &self.opt
     }
 
     pub fn platform(&self) -> Platform {
@@ -564,7 +579,7 @@ impl BuildTarget {
     pub fn compile_targets(&self) -> impl Iterator<Item = CompileTarget> + '_ {
         self.archs
             .iter()
-            .map(|arch| CompileTarget::new(self.platform, *arch, self.opt))
+            .map(|arch| CompileTarget::new(self.platform, *arch, self.opt.clone()))
     }
 
     pub fn is_host(&self) -> bool {
@@ -761,7 +776,7 @@ impl BuildEnv {
     }
 
     pub fn cargo_build(&self, target: CompileTarget, target_dir: &Path) -> Result<CargoBuild> {
-        let mut cargo = self.cargo.build(target, target_dir)?;
+        let mut cargo = self.cargo.build(target.clone(), target_dir)?;
         if target.platform() == Platform::Linux {
             cargo.add_link_arg("-Wl,-rpath");
             cargo.add_link_arg("-Wl,$ORIGIN/lib");
@@ -820,7 +835,7 @@ impl BuildEnv {
     pub fn cargo_artefact(
         &self,
         target_dir: &Path,
-        target: CompileTarget,
+        target: &CompileTarget,
         crate_type: CrateType,
     ) -> Result<PathBuf> {
         self.cargo.artifact(target_dir, target, None, crate_type)
