@@ -287,8 +287,8 @@ impl CompileTarget {
         self.arch
     }
 
-    pub fn opt(&self) -> Opt {
-        self.opt.clone()
+    pub fn opt(&self) -> &Opt {
+        &self.opt
     }
 
     pub fn android_abi(&self) -> apk::Target {

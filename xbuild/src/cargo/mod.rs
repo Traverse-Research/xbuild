@@ -264,7 +264,11 @@ impl CargoBuild {
         cmd.current_dir(root_dir);
         cmd.arg("build");
         cmd.arg("--target-dir").arg(target_dir);
-        if target.opt() == Opt::Release {
+
+        if let Opt::Profile(profile) = target.opt() {
+            cmd.arg("--profile");
+            cmd.arg(profile);
+        } else if *target.opt() == Opt::Release {
             cmd.arg("--release");
         }
         if let Some(triple) = triple.as_ref() {

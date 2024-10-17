@@ -310,7 +310,7 @@ pub fn build(env: &BuildEnv) -> Result<()> {
                     let mut msix = Msix::new(
                         out,
                         env.config().windows().manifest.clone(),
-                        target.opt() != Opt::Debug,
+                        *target.opt() != Opt::Debug,
                     )?;
                     if let Some(icon) = env.icon() {
                         dbg!(icon);
