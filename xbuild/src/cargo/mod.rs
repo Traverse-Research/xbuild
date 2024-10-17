@@ -465,7 +465,7 @@ impl CargoBuild {
     }
 
     pub fn set_sysroot(&mut self, path: &Path) {
-        let arg = format!("--sysroot=\"{}\"", path.display());
+        let arg = format!("--sysroot={}", path.display());
         self.add_cflag(&arg);
         self.add_link_arg(&arg);
     }
