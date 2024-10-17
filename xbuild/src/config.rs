@@ -80,7 +80,7 @@ impl Config {
         &mut self,
         manifest_package: &Package,
         workspace_manifest: Option<&Manifest>,
-        opt: Opt,
+        opt: &Opt,
     ) -> Result<()> {
         // android
         let wry = self.android.wry;
@@ -166,7 +166,7 @@ impl Config {
         }
         application
             .debuggable
-            .get_or_insert_with(|| opt == Opt::Debug);
+            .get_or_insert_with(|| *opt == Opt::Debug);
 
         application
             .has_code

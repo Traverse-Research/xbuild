@@ -61,11 +61,12 @@ pub fn build(env: &BuildEnv) -> Result<()> {
                 appimage.add_icon(icon)?;
             }
 
-            let main = env.cargo_artefact(&arch_dir.join("cargo"), target, CrateType::Bin)?;
+            let main = env.cargo_artefact(&arch_dir.join("cargo"), &target, CrateType::Bin)?;
             appimage.add_file(&main, Path::new(env.name()))?;
 
             if has_lib {
-                let lib = env.cargo_artefact(&arch_dir.join("cargo"), target, CrateType::Cdylib)?;
+                let lib =
+                    env.cargo_artefact(&arch_dir.join("cargo"), &target, CrateType::Cdylib)?;
                 appimage.add_file(&lib, &Path::new("lib").join(lib.file_name().unwrap()))?;
             }
 
@@ -83,7 +84,7 @@ pub fn build(env: &BuildEnv) -> Result<()> {
             for target in env.target().compile_targets() {
                 let arch_dir = platform_dir.join(target.arch().to_string());
                 let cargo_dir = arch_dir.join("cargo");
-                let lib = env.cargo_artefact(&cargo_dir, target, CrateType::Cdylib)?;
+                let lib = env.cargo_artefact(&cargo_dir, &target, CrateType::Cdylib)?;
 
                 let ndk = env.android_ndk();
 
@@ -99,7 +100,7 @@ pub fn build(env: &BuildEnv) -> Result<()> {
 
                 let mut search_paths = env
                     .cargo()
-                    .lib_search_paths(&cargo_dir, target)
+                    .lib_search_paths(&cargo_dir, &target)
                     .with_context(|| {
                         format!(
                             "Finding libraries in `{}` for {:?}",
@@ -203,7 +204,7 @@ pub fn build(env: &BuildEnv) -> Result<()> {
                 let mut apk = Apk::new(
                     out,
                     env.config().android().manifest.clone(),
-                    env.target().opt() != Opt::Debug,
+                    *env.target().opt() != Opt::Debug,
                 )?;
                 apk.add_res(env.icon(), &env.android_jar())?;
 
@@ -242,11 +243,12 @@ pub fn build(env: &BuildEnv) -> Result<()> {
                 app.add_icon(icon)?;
             }
 
-            let main = env.cargo_artefact(&arch_dir.join("cargo"), target, CrateType::Bin)?;
+            let main = env.cargo_artefact(&arch_dir.join("cargo"), &target, CrateType::Bin)?;
             app.add_executable(&main)?;
 
             if has_lib {
-                let lib = env.cargo_artefact(&arch_dir.join("cargo"), target, CrateType::Cdylib)?;
+                let lib =
+                    env.cargo_artefact(&arch_dir.join("cargo"), &target, CrateType::Cdylib)?;
                 app.add_lib(&lib)?;
             }
 
@@ -273,7 +275,7 @@ pub fn build(env: &BuildEnv) -> Result<()> {
             if let Some(icon) = env.icon() {
                 app.add_icon(icon)?;
             }
-            let main = env.cargo_artefact(&arch_dir.join("cargo"), target, CrateType::Bin)?;
+            let main = env.cargo_artefact(&arch_dir.join("cargo"), &target, CrateType::Bin)?;
             app.add_executable(&main)?;
             if let Some(provisioning_profile) = env.target().provisioning_profile() {
                 app.add_provisioning_profile(provisioning_profile)?;
@@ -299,7 +301,7 @@ pub fn build(env: &BuildEnv) -> Result<()> {
             let arch_dir = platform_dir.join(target.arch().to_string());
             std::fs::create_dir_all(&arch_dir)?;
             let out = arch_dir.join(format!("{}.{}", env.name(), env.target().format()));
-            let main = env.cargo_artefact(&arch_dir.join("cargo"), target, CrateType::Bin)?;
+            let main = env.cargo_artefact(&arch_dir.join("cargo"), &target, CrateType::Bin)?;
             match env.target().format() {
                 Format::Exe => {
                     std::fs::copy(&main, &out)?;
@@ -308,7 +310,7 @@ pub fn build(env: &BuildEnv) -> Result<()> {
                     let mut msix = Msix::new(
                         out,
                         env.config().windows().manifest.clone(),
-                        target.opt() != Opt::Debug,
+                        *target.opt() != Opt::Debug,
                     )?;
                     if let Some(icon) = env.icon() {
                         dbg!(icon);
@@ -328,8 +330,11 @@ pub fn build(env: &BuildEnv) -> Result<()> {
 
                     // TODO: Investigate use-cases for `.dll`s in MSIX (Rust compiles static self-contained binaries)
                     if has_lib {
-                        match env.cargo_artefact(&arch_dir.join("cargo"), target, CrateType::Cdylib)
-                        {
+                        match env.cargo_artefact(
+                            &arch_dir.join("cargo"),
+                            &target,
+                            CrateType::Cdylib,
+                        ) {
                             Ok(lib) => msix.add_file(
                                 &lib,
                                 Path::new(lib.file_name().unwrap()),

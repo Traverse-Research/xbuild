@@ -38,7 +38,11 @@ pub fn run(env: &BuildEnv) -> Result<()> {
 
 pub fn lldb(env: &BuildEnv) -> Result<()> {
     if let Some(device) = env.target().device() {
-        let target = CompileTarget::new(device.platform()?, device.arch()?, env.target().opt());
+        let target = CompileTarget::new(
+            device.platform()?,
+            device.arch()?,
+            env.target().opt().clone(),
+        );
         let cargo_dir = env
             .build_dir()
             .join(target.opt().to_string())
@@ -46,7 +50,7 @@ pub fn lldb(env: &BuildEnv) -> Result<()> {
             .join(target.arch().to_string())
             .join("cargo");
         let executable = match target.platform() {
-            Platform::Android => env.cargo_artefact(&cargo_dir, target, CrateType::Cdylib)?,
+            Platform::Android => env.cargo_artefact(&cargo_dir, &target, CrateType::Cdylib)?,
             Platform::Ios => env.output(),
             Platform::Linux => env.output().join(env.name()),
             Platform::Macos => env.executable(),

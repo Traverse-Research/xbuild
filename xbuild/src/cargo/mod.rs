@@ -167,7 +167,7 @@ impl Cargo {
     pub fn artifact(
         &self,
         target_dir: &Path,
-        target: CompileTarget,
+        target: &CompileTarget,
         artifact: Option<Artifact>,
         ty: CrateType,
     ) -> Result<PathBuf> {
@@ -193,7 +193,7 @@ impl Cargo {
     pub fn lib_search_paths(
         &self,
         target_dir: &Path,
-        target: CompileTarget,
+        target: &CompileTarget,
     ) -> Result<Vec<PathBuf>> {
         let arch_dir = if target.is_host()? {
             target_dir.to_path_buf()
@@ -264,7 +264,11 @@ impl CargoBuild {
         cmd.current_dir(root_dir);
         cmd.arg("build");
         cmd.arg("--target-dir").arg(target_dir);
-        if target.opt() == Opt::Release {
+
+        if let Opt::Profile(profile) = target.opt() {
+            cmd.arg("--profile");
+            cmd.arg(profile);
+        } else if *target.opt() == Opt::Release {
             cmd.arg("--release");
         }
         if let Some(triple) = triple.as_ref() {
