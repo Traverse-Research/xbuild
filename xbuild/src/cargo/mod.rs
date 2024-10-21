@@ -469,7 +469,17 @@ impl CargoBuild {
     }
 
     pub fn set_sysroot(&mut self, path: &Path) {
-        let arg = format!("--sysroot={}", path.display());
+        let path = path.display().to_string();
+
+        // For some reason when a user has a space in their path, the sysroot
+        // argument must be constructed differently. We haven't found the underlying reason
+        // and a proper fix yet so we do this if statement instead.
+        let arg = if path.contains(' ') {
+            format!("--sysroot=\"{}\"", path)
+        } else {
+            format!("--sysroot={}", path)
+        };
+
         self.add_cflag(&arg);
         self.add_link_arg(&arg);
     }
