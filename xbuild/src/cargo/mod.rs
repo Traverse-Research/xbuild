@@ -474,7 +474,7 @@ impl CargoBuild {
         // For some reason when a user has a space in their path, the sysroot
         // argument must be constructed differently. We haven't found the underlying reason
         // and a proper fix yet so we do this if statement instead.
-        let arg = if path.contains(' ') {
+        let arg = if path.contains(SEP) {
             format!("--sysroot=\"{}\"", path)
         } else {
             format!("--sysroot={}", path)
