@@ -286,7 +286,7 @@ impl CargoBuild {
             cmd.arg("--no-default-features");
         }
         match features {
-            FeatureSpecification::List(vec) => {
+            FeatureSpecification::List(features) => {
                 for features in features {
                     cmd.arg("--features").arg(features);
                 }
