@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use apk::manifest::{Activity, AndroidManifest, IntentFilter, MetaData};
 use apk::VersionCode;
 use appbundle::InfoPlist;
-use msix::manifest::{Application, ApplicationKind};
+use msix::manifest::Application;
 use msix::AppxManifest;
 use serde::Deserialize;
 use std::collections::HashMap;

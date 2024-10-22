@@ -1,6 +1,6 @@
 //! LLVM utilities
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{ensure, Context, Result};
 use std::collections::HashSet;
 use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};

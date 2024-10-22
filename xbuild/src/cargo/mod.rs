@@ -14,8 +14,6 @@ use self::config::LocalizedConfig;
 use self::manifest::Manifest;
 use crate::{CompileTarget, Opt};
 
-const SEP: &str = "\x1f";
-
 pub enum FeatureSpecification {
     List(Vec<String>),
     All,
@@ -331,7 +329,7 @@ impl CargoBuild {
     }
 
     pub fn use_android_jar(&mut self, path: &Path) {
-        self.cmd.env("XBUILD_ANDROID_JAR", &path);
+        self.cmd.env("XBUILD_ANDROID_JAR", path);
     }
 
     pub fn use_windows_sdk(&mut self, path: &Path) -> Result<()> {
