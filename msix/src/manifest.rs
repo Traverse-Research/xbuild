@@ -264,9 +264,9 @@ mod tests {
     #[test]
     fn test_properties() {
         let props = Properties {
-            display_name: Some("".into()),
-            publisher_display_name: Some("".into()),
-            logo: Some("".into()),
+            display_name: "".into(),
+            publisher_display_name: "".into(),
+            logo: "".into(),
             description: Some("".into()),
         };
         let xml = quick_xml::se::to_string(&props).unwrap();
@@ -283,14 +283,16 @@ mod tests {
                 processor_architecture: Some("x64".into()),
             },
             properties: Properties {
-                display_name: Some("fluttertodoapp".into()),
-                publisher_display_name: Some("com.flutter.fluttertodoapp".into()),
-                logo: Some("Images\\StoreLogo.png".into()),
+                display_name: "fluttertodoapp".into(),
+                publisher_display_name: "com.flutter.fluttertodoapp".into(),
+                logo: "Images\\StoreLogo.png".into(),
                 description: Some("A new Flutter project.".into()),
             },
             resources: Resources {
                 resource: vec![Resource {
-                    language: "en".into(),
+                    language: Some("en".into()),
+                    scale: None,
+                    dx_feature_level: None,
                 }],
             },
             dependencies: Dependencies {
@@ -309,15 +311,15 @@ mod tests {
             ],
             applications: Applications {
                 application: vec![Application {
-                    id: Some("fluttertodoapp".into()),
+                    id: "fluttertodoapp".into(),
                     executable: Some("todoapp.exe".into()),
                     entry_point: Some("Windows.FullTrustApplication".into()),
                     visual_elements: VisualElements {
-                        background_color: Some("transparent".into()),
-                        display_name: Some("fluttertodoapp".into()),
-                        description: Some("A new flutter project.".into()),
-                        logo_44x44: Some("Images\\Square44x44Logo.png".into()),
-                        logo_150x150: Some("Images\\Square150x150Logo.png".into()),
+                        background_color: "transparent".into(),
+                        display_name: "fluttertodoapp".into(),
+                        description: "A new flutter project.".into(),
+                        logo_44x44: "Images\\Square44x44Logo.png".into(),
+                        logo_150x150: "Images\\Square150x150Logo.png".into(),
                         default_tile: Some(DefaultTile {
                             short_name: Some("fluttertodoapp".into()),
                             logo_71x71: Some("Images\\SmallTile.png".into()),
