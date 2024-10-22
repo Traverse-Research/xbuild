@@ -2,6 +2,7 @@ use crate::cargo::{Cargo, CargoBuild, CrateType};
 use crate::config::Config;
 use crate::devices::Device;
 use anyhow::{ensure, Result};
+use cargo::FeatureSpecification;
 use clap::Parser;
 use std::path::{Path, PathBuf};
 use xcommon::Signer;
@@ -378,7 +379,11 @@ impl CargoArgs {
     pub fn cargo(self) -> Result<Cargo> {
         Cargo::new(
             self.package.as_deref(),
-            self.features,
+            if self.all_features {
+                FeatureSpecification::All
+            } else {
+                FeatureSpecification::List(self.features)
+            },
             self.no_default_features,
             self.manifest_path,
             self.target_dir,
