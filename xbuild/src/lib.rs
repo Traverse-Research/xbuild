@@ -2,6 +2,7 @@ use crate::cargo::{Cargo, CargoBuild, CrateType};
 use crate::config::Config;
 use crate::devices::Device;
 use anyhow::{ensure, Result};
+use cargo::FeatureSpecification;
 use clap::Parser;
 use std::path::{Path, PathBuf};
 use xcommon::Signer;
@@ -367,6 +368,8 @@ pub struct CargoArgs {
     /// Space or comma separated list of features to activate
     #[clap(long, short = 'F')]
     features: Vec<String>,
+    #[clap(long, conflicts_with = "features")]
+    all_features: bool,
     /// Do not activate the `default` feature.
     #[clap(long)]
     no_default_features: bool,
@@ -376,7 +379,11 @@ impl CargoArgs {
     pub fn cargo(self) -> Result<Cargo> {
         Cargo::new(
             self.package.as_deref(),
-            self.features,
+            if self.all_features {
+                FeatureSpecification::All
+            } else {
+                FeatureSpecification::List(self.features)
+            },
             self.no_default_features,
             self.manifest_path,
             self.target_dir,
