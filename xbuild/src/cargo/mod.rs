@@ -292,7 +292,7 @@ impl CargoBuild {
                 }
             }
             FeatureSpecification::All => {
-                cmd.arg("--all_features");
+                cmd.arg("--all-features");
             }
         }
 
