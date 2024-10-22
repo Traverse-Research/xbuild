@@ -16,9 +16,14 @@ use crate::{CompileTarget, Opt};
 
 const SEP: &str = "\x1f";
 
+pub enum FeatureSpecification {
+    List(Vec<String>),
+    All,
+}
+
 pub struct Cargo {
     package: String,
-    features: Vec<String>,
+    features: FeatureSpecification,
     no_default_features: bool,
     workspace_manifest: Option<Manifest>,
     manifest: Manifest,
@@ -30,7 +35,7 @@ pub struct Cargo {
 impl Cargo {
     pub fn new(
         package: Option<&str>,
-        features: Vec<String>,
+        features: FeatureSpecification,
         no_default_features: bool,
         manifest_path: Option<PathBuf>,
         target_dir: Option<PathBuf>,
@@ -249,7 +254,7 @@ pub struct CargoBuild {
 impl CargoBuild {
     fn new(
         target: CompileTarget,
-        features: &[String],
+        features: &FeatureSpecification,
         no_default_features: bool,
         root_dir: &Path,
         target_dir: &Path,
@@ -280,8 +285,13 @@ impl CargoBuild {
         if no_default_features {
             cmd.arg("--no-default-features");
         }
-        for features in features {
-            cmd.arg("--features").arg(features);
+        match features {
+            FeatureSpecification::List(vec) => {
+                for features in features {
+                    cmd.arg("--features").arg(features);
+                }
+            }
+            FeatureSpecification::All => cmd.arg("--all_features"),
         }
 
         Ok(Self {

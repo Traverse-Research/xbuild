@@ -367,6 +367,8 @@ pub struct CargoArgs {
     /// Space or comma separated list of features to activate
     #[clap(long, short = 'F')]
     features: Vec<String>,
+    #[clap(long, conflicts_with = "features")]
+    all_features: bool,
     /// Do not activate the `default` feature.
     #[clap(long)]
     no_default_features: bool,
