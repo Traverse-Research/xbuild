@@ -193,6 +193,7 @@ impl WorkItem {
 impl WorkItem {
     const ORG: &'static str = "Traverse-Research";
     const REPO: &'static str = "xbuild";
+    // This needs to be in line with the latest release tag
     const VERSION: &'static str = "v0.2.0+traverse";
 
     pub fn xbuild_release(output: PathBuf, artifact: &str) -> Self {
