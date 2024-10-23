@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - run: |
+        # ANDROID_NDK_LATEST_HOME is defined in the github ubuntu-latest runner. If this needs to be installed on a different image
+        # this can be done by running `sdkmanager "ndk;VERSION"` and setting `ANDROID_NDK_LATEST_HOME` to `$ANDROID_HOME/ndk/VERSION`.
         TOOLCHAIN="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64"
         CLANG_VERSION="$(ls $TOOLCHAIN/lib/clang)"
         CLANG="$TOOLCHAIN/lib/clang/$CLANG_VERSION"
