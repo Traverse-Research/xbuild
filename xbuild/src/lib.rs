@@ -37,6 +37,14 @@ mod download;
 mod gradle;
 mod task;
 
+/// Current NDK version xbuild should use for Android.
+///
+/// If this version is not available on a users machine xbuild will download it
+/// from our releases: ['https://github.com/Traverse-Research/xbuild/releases'].
+///
+/// The actual version used is determined by whatever the "ubuntu-latest" image has installed.
+const ANDROID_NDK_CURRENT: &str = "27.1.12297006";
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Opt {
     Debug,
@@ -753,7 +761,9 @@ impl BuildEnv {
     }
 
     pub fn android_ndk(&self) -> PathBuf {
-        self.cache_dir().join("Android.ndk")
+        self.cache_dir()
+            .join("Android.ndk")
+            .join(ANDROID_NDK_CURRENT)
     }
 
     pub fn ios_sdk(&self) -> PathBuf {
