@@ -21,7 +21,7 @@ jobs:
         echo "ANDROID_NDK_VERSION=$NDK_VERSION"
         echo "CLANG_VERSION=$CLANG_VERSION"
 
-        mkdir -p Android.ndk/$NDK_VERSION && cd Android.ndk/$NDK_VERSION
+        mkdir -p $NDK_VERSION && cd $NDK_VERSION
 
         cp -r $TOOLCHAIN/sysroot/usr    ./usr
         cp -r $CLANG/lib/linux/aarch64/* ./usr/lib/aarch64-linux-android/
@@ -33,7 +33,7 @@ jobs:
         echo "INPUT(-lunwind)" > ./usr/lib/arm-linux-androideabi/libgcc.a
         echo "INPUT(-lunwind)" > ./usr/lib/x86_64-linux-android/libgcc.a
         echo "INPUT(-lunwind)" > ./usr/lib/i686-linux-android/libgcc.a
-    - run: tar --zstd -cf Android.ndk.tar.zst Android.ndk
+    - run: tar --zstd -cf Android.ndk.tar.zst $NDK_VERSION
     - run: gh release upload $TAG Android.ndk.tar.zst -R Traverse-Research/xbuild
       env:
         GITHUB_TOKEN: ${{ secrets.XBUILD_SECRET }}
