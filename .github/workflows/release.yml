@@ -19,7 +19,7 @@ jobs:
     - run: mv bin/x xbuild-linux-x64
     - run: gh release upload $TAG xbuild-linux-x64 -R rust-mobile/xbuild
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.XBUILD_SECRET }}
         TAG: ${{ github.event.release.tag_name }}
 
   macos:
@@ -31,7 +31,7 @@ jobs:
     - run: mv bin/x xbuild-macos-x64
     - run: gh release upload $TAG xbuild-macos-x64 -R rust-mobile/xbuild
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.XBUILD_SECRET }}
         TAG: ${{ github.event.release.tag_name }}
 
   windows:
@@ -43,5 +43,5 @@ jobs:
     - run: mv bin/x.exe xbuild-windows-x64.exe
     - run: gh release upload $TAG xbuild-windows-x64.exe -R rust-mobile/xbuild
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.XBUILD_SECRET }}
         TAG: ${{ github.event.release.tag_name }}
