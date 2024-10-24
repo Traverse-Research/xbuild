@@ -34,7 +34,7 @@ jobs:
     - run: tar --zstd -cf Android.ndk.tar.zst Android.ndk
     - run: gh release upload $TAG Android.ndk.tar.zst -R Traverse-Research/xbuild
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.XBUILD_SECRET }}
         TAG: ${{ github.event.release.tag_name }}
 
   macos:
@@ -47,7 +47,7 @@ jobs:
     - run: gtar --zstd -cf MacOSX.sdk.tar.zst MacOSX.sdk
     - run: gh release upload $TAG MacOSX.sdk.tar.zst -R Traverse-Research/xbuild
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.XBUILD_SECRET }}
         TAG: ${{ github.event.release.tag_name }}
 
   ios:
@@ -60,7 +60,7 @@ jobs:
     - run: gtar --zstd -cf iPhoneOS.sdk.tar.zst iPhoneOS.sdk
     - run: gh release upload $TAG iPhoneOS.sdk.tar.zst -R Traverse-Research/xbuild
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.XBUILD_SECRET }}
         TAG: ${{ github.event.release.tag_name }}
 
   windows:
@@ -73,5 +73,5 @@ jobs:
     - run: tar --zstd -cf Windows.sdk.tar.zst Windows.sdk
     - run: gh release upload $TAG Windows.sdk.tar.zst -R Traverse-Research/xbuild
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.XBUILD_SECRET }}
         TAG: ${{ github.event.release.tag_name }}
