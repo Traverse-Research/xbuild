@@ -217,6 +217,7 @@ pub fn build(env: &BuildEnv, libraries: Vec<(Target, PathBuf)>, out: &Path) -> R
         Format::Apk => "assemble",
         _ => unreachable!(),
     });
+
     task::run(cmd, true)?;
     let output = gradle
         .join("app")
@@ -227,14 +228,22 @@ pub fn build(env: &BuildEnv, libraries: Vec<(Target, PathBuf)>, out: &Path) -> R
             Format::Apk => "apk",
             _ => unreachable!(),
         })
-        .join(opt.to_string())
-        .join(match (format, opt) {
-            (Format::Apk, Opt::Debug) => "app-debug.apk",
-            (Format::Apk, Opt::Release) => "app-release-unsigned.apk",
-            (Format::Aab, Opt::Debug) => "app-debug.aab",
-            (Format::Aab, Opt::Release) => "app-release.aab",
-            _ => unreachable!(),
+        .join(match opt {
+            Opt::Debug => "debug",
+            Opt::Release | Opt::Profile(_) => "release",
+        })
+        .join({
+            match (format, opt) {
+                (Format::Apk, Opt::Debug) => "app-debug.apk",
+                (Format::Apk, Opt::Release) | (Format::Apk, Opt::Profile(_)) => {
+                    "app-release-unsigned.apk"
+                }
+                (Format::Aab, Opt::Debug) => "app-debug.aab",
+                (Format::Aab, Opt::Release) | (Format::Aab, Opt::Profile(_)) => "app-release.aab",
+                _ => unreachable!(),
+            }
         });
+
     std::fs::copy(output, out)?;
     Ok(())
 }
