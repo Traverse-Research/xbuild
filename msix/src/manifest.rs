@@ -95,7 +95,11 @@ pub struct Properties {
     pub publisher_display_name: String,
     #[serde(serialize_with = "serialize_element")]
     pub logo: String,
-    #[serde(default, serialize_with = "serialize_element")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "serialize_element"
+    )]
     pub description: Option<String>,
 }
 
@@ -104,7 +108,6 @@ where
     S: Serializer,
 {
     let mut tuple = serializer.serialize_tuple(1)?;
-    // TODO: Skip if None!
     tuple.serialize_element(value)?;
     tuple.end()
 }
@@ -181,7 +184,7 @@ pub struct Application {
     // pub kind: ApplicationKind,
     pub executable: Option<String>,
     pub entry_point: Option<String>,
-    #[serde(rename(serialize = "uap:VisualElements"))]
+    #[serde(default, rename(serialize = "uap:VisualElements"))]
     pub visual_elements: VisualElements,
 }
 

@@ -300,7 +300,7 @@ pub fn build(env: &BuildEnv) -> Result<()> {
             let target = env.target().compile_targets().next().unwrap();
             let arch_dir = platform_dir.join(target.arch().to_string());
             std::fs::create_dir_all(&arch_dir)?;
-            let out = arch_dir.join(format!("{}.{}", env.name(), env.target().format()));
+            let out = arch_dir.join(format!("{}.zip", env.name(),));
             let main = env.cargo_artefact(&arch_dir.join("cargo"), &target, CrateType::Bin)?;
             match env.target().format() {
                 Format::Exe => {
@@ -328,23 +328,23 @@ pub fn build(env: &BuildEnv) -> Result<()> {
                         ZipFileOptions::Compressed,
                     )?;
 
-                    // TODO: Investigate use-cases for `.dll`s in MSIX (Rust compiles static self-contained binaries)
-                    if has_lib {
-                        match env.cargo_artefact(
-                            &arch_dir.join("cargo"),
-                            &target,
-                            CrateType::Cdylib,
-                        ) {
-                            Ok(lib) => msix.add_file(
-                                &lib,
-                                Path::new(lib.file_name().unwrap()),
-                                ZipFileOptions::Compressed,
-                            )?,
-                            Err(e) => log::error!(
-                                "Failed to retrieve library artifact, skipping `.dll`: {e:?}"
-                            ),
-                        }
-                    }
+                    // // TODO: Investigate use-cases for `.dll`s in MSIX (Rust compiles static self-contained binaries)
+                    // if has_lib {
+                    //     match env.cargo_artefact(
+                    //         &arch_dir.join("cargo"),
+                    //         &target,
+                    //         CrateType::Cdylib,
+                    //     ) {
+                    //         Ok(lib) => msix.add_file(
+                    //             &lib,
+                    //             Path::new(lib.file_name().unwrap()),
+                    //             ZipFileOptions::Compressed,
+                    //         )?,
+                    //         Err(e) => log::error!(
+                    //             "Failed to retrieve library artifact, skipping `.dll`: {e:?}"
+                    //         ),
+                    //     }
+                    // }
 
                     msix.finish(env.target().signer().cloned())?;
                 }

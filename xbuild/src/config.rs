@@ -293,11 +293,15 @@ impl Config {
         assert!(self.windows.manifest.identity.version.is_empty());
         // Windows wants a.b.c.d:
         self.windows.manifest.identity.version = format!("{}.0", package_version);
-        self.windows
-            .manifest
-            .properties
-            .description
-            .get_or_insert(package_description);
+
+        if !package_description.is_empty() {
+            self.windows
+                .manifest
+                .properties
+                .description
+                .get_or_insert(package_description);
+        }
+
 
         if self
             .windows
