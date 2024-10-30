@@ -442,6 +442,12 @@ pub struct BuildTargetArgs {
     /// Path to an api key.
     #[clap(long)]
     api_key: Option<PathBuf>,
+    /// Enables stripping of debug symbols from the built .so files for Android.
+    /// The pre-strip versions are copied to a separate directory.
+    /// ## NOTE:
+    /// Only implemented in the Android path.
+    #[clap(long)]
+    strip_debug_symbols: bool,
 }
 
 impl BuildTargetArgs {
@@ -548,6 +554,7 @@ impl BuildTargetArgs {
             provisioning_profile,
             api_key,
             android_gradle,
+            strip_debug_symbols: self.strip_debug_symbols,
         })
     }
 }
@@ -564,6 +571,7 @@ pub struct BuildTarget {
     provisioning_profile: Option<Vec<u8>>,
     api_key: Option<PathBuf>,
     android_gradle: bool,
+    strip_debug_symbols: bool,
 }
 
 impl BuildTarget {
@@ -627,6 +635,7 @@ pub struct BuildEnv {
     config: Config,
     verbose: bool,
     offline: bool,
+    strip_debug_symbols: bool,
 }
 
 impl BuildEnv {
@@ -646,7 +655,6 @@ impl BuildEnv {
             .map(|icon| cargo.package_root().join(icon));
         Ok(Self {
             name: package.name.clone(),
-            build_target,
             icon,
             cargo,
             config,
@@ -654,6 +662,8 @@ impl BuildEnv {
             cache_dir,
             verbose,
             offline,
+            strip_debug_symbols: build_target.strip_debug_symbols,
+            build_target,
         })
     }
 
