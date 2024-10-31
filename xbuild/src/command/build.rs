@@ -86,6 +86,28 @@ pub fn build(env: &BuildEnv) -> Result<()> {
                 let cargo_dir = arch_dir.join("cargo");
                 let lib = env.cargo_artefact(&cargo_dir, &target, CrateType::Cdylib)?;
 
+                if env.strip_debug_symbols {
+                    let filename = lib.file_name().unwrap();
+                    let unstripped_lib = lib.parent().unwrap().join("pre-strip").join(filename);
+
+                    if !&unstripped_lib.exists() {
+                        std::fs::create_dir_all(unstripped_lib.parent().unwrap()).unwrap();
+                        std::fs::File::create(&unstripped_lib).unwrap();
+                    }
+                    std::fs::copy(&lib, unstripped_lib)
+                        .expect("Could not copy lib before stripping its debug symbols");
+
+                    std::process::Command::new("strip")
+                        // I'm told this should always be valid for Android, so use this as the target
+                        .arg("--target=elf64-little")
+                        .arg("--strip-all")
+                        .arg(&lib)
+                        .spawn()
+                        .expect("Could not strip debug symbols from lib")
+                        .wait()
+                        .expect("Stripping of debug symbols from lib failed");
+                }
+
                 let ndk = env.android_ndk();
 
                 let deps_dir = {
