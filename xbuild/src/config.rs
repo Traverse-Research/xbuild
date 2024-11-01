@@ -278,21 +278,13 @@ impl Config {
             .get_or_insert_with(|| "10.11".to_string());
 
         // windows
-        // self.windows
-        //     .manifest
-        //     .properties
-        //     .display_name
-        // This is not a "friendly display name"
-        //     .get_or_insert_with(|| manifest_package.name.clone());
-        // TODO: Pass package name etc
-        // self.windows
-        //     .manifest
-        //     .identity
-        //     .version
-        //     .get_or_insert(package_version);
-        assert!(self.windows.manifest.identity.version.is_empty());
-        // Windows wants a.b.c.d:
-        self.windows.manifest.identity.version = format!("{}.0", package_version);
+        if self.windows.manifest.properties.display_name.is_empty() {
+            self.windows.manifest.properties.display_name = manifest_package.name.clone();
+        }
+
+        if self.windows.manifest.identity.version.is_empty() {
+            self.windows.manifest.identity.version = format!("{}.0", package_version);
+        }
 
         if !package_description.is_empty() {
             self.windows
@@ -301,7 +293,6 @@ impl Config {
                 .description
                 .get_or_insert(package_description);
         }
-
 
         if self
             .windows
@@ -321,11 +312,9 @@ impl Config {
 
         if self.windows.manifest.applications.application.is_empty() {
             let app = Application {
-                // TODO: Model XOR of these fields and StartPage
-                // kind: ApplicationKind::Executable {
                 executable: Some(format!("{}.exe", manifest_package.name)),
                 entry_point: Some("windows.fullTrustApplication".into()),
-                // },
+
                 ..Default::default()
             };
             log::info!("No target device family configured. Using default {app:?}");
@@ -403,6 +392,8 @@ pub enum AssetPath {
         optional: bool,
         #[serde(default)]
         alignment: ZipAlignmentOptions,
+        #[serde(default)]
+        profile: Vec<String>,
     },
 }
 
@@ -428,6 +419,13 @@ impl AssetPath {
         match self {
             AssetPath::Path(_) => Default::default(),
             AssetPath::Extended { alignment, .. } => *alignment,
+        }
+    }
+
+    pub fn profile(&self) -> &'static str {
+        match self {
+            AssetPath::Path(_) => "dev",
+            AssetPath::Extended { profile, .. } => {}
         }
     }
 }
@@ -518,5 +516,7 @@ pub struct LinuxConfig {
 pub struct WindowsConfig {
     #[serde(flatten)]
     generic: GenericConfig,
+    #[serde(default)]
+    pub assets: Vec<AssetPath>,
     pub manifest: AppxManifest,
 }

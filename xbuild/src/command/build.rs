@@ -300,7 +300,7 @@ pub fn build(env: &BuildEnv) -> Result<()> {
             let target = env.target().compile_targets().next().unwrap();
             let arch_dir = platform_dir.join(target.arch().to_string());
             std::fs::create_dir_all(&arch_dir)?;
-            let out = arch_dir.join(format!("{}.zip", env.name(),));
+            let out = arch_dir.join(format!("{}.msix", env.name()));
             let main = env.cargo_artefact(&arch_dir.join("cargo"), &target, CrateType::Bin)?;
             match env.target().format() {
                 Format::Exe => {
@@ -312,14 +312,24 @@ pub fn build(env: &BuildEnv) -> Result<()> {
                         env.config().windows().manifest.clone(),
                         *target.opt() != Opt::Debug,
                     )?;
-                    if let Some(icon) = env.icon() {
-                        dbg!(icon);
-                        msix.add_icon(icon)?;
-                        assert_eq!(
-                            &env.config.windows().manifest.properties.logo,
-                            "Images/StoreLogo.scale-100.png",
-                        );
+
+                    let icon = env.icon().context(
+                        "`--format msix` requires `icon` to be specified in the manifest.yaml",
+                    )?;
+
+                    msix.add_icon(icon)?;
+
+                    for asset in &env.config().windows().assets {
+                        let path = env.cargo().package_root().join(asset.path());
+
+                        if !asset.optional() || path.exists() {
+                            if path.is_dir() {
+                                let opts = asset.alignment().to_zip_file_options();
+                                msix.add_directory(path.as_path(), dest, opts)?;
+                            }
+                        }
                     }
+
                     // TODO: *.pri
 
                     msix.add_file(
@@ -327,24 +337,6 @@ pub fn build(env: &BuildEnv) -> Result<()> {
                         format!("{}.exe", env.name()).as_ref(),
                         ZipFileOptions::Compressed,
                     )?;
-
-                    // // TODO: Investigate use-cases for `.dll`s in MSIX (Rust compiles static self-contained binaries)
-                    // if has_lib {
-                    //     match env.cargo_artefact(
-                    //         &arch_dir.join("cargo"),
-                    //         &target,
-                    //         CrateType::Cdylib,
-                    //     ) {
-                    //         Ok(lib) => msix.add_file(
-                    //             &lib,
-                    //             Path::new(lib.file_name().unwrap()),
-                    //             ZipFileOptions::Compressed,
-                    //         )?,
-                    //         Err(e) => log::error!(
-                    //             "Failed to retrieve library artifact, skipping `.dll`: {e:?}"
-                    //         ),
-                    //     }
-                    // }
 
                     msix.finish(env.target().signer().cloned())?;
                 }

@@ -92,15 +92,16 @@ impl Msix {
             ZipFileOptions::Compressed,
             &to_xml(&self.manifest, true),
         )?;
+
         self.zip.finish()?;
         Self::sign(&self.path, signer, self.compress)
     }
 
     pub fn sign(path: &Path, signer: Option<Signer>, compress: bool) -> Result<()> {
-        let signer = signer
-            .map(Ok)
-            .unwrap_or_else(|| Signer::new(DEBUG_PEM))
-            .unwrap();
+        // let signer = signer
+        //     .map(Ok)
+        //     .unwrap_or_else(|| Signer::new(DEBUG_PEM))
+        //     .unwrap();
 
         // add content types and block map
         let mut zip = ZipArchive::new(BufReader::new(File::open(path)?))?;
@@ -129,33 +130,33 @@ impl Msix {
         zip.finish()?;
 
         // compute zip hashes
-        let mut r = BufReader::new(File::open(path)?);
-        let info = ZipInfo::new(&mut r)?;
-        r.rewind()?;
-        let mut hasher = Sha256::new();
-        let mut pc = (&mut r).take(info.cd_start);
-        std::io::copy(&mut pc, &mut hasher)?;
-        let axpc = hasher.finalize_reset();
-        hasher.reset();
-        std::io::copy(&mut r, &mut hasher)?;
-        let axcd = hasher.finalize();
-        let digests = Digests {
-            axpc: axpc.into(),
-            axcd: axcd.into(),
-            axct: axct.into(),
-            axbm: axbm.into(),
-            ..Default::default()
-        };
+        // let mut r = BufReader::new(File::open(path)?);
+        // let info = ZipInfo::new(&mut r)?;
+        // r.rewind()?;
+        // let mut hasher = Sha256::new();
+        // let mut pc = (&mut r).take(info.cd_start);
+        // std::io::copy(&mut pc, &mut hasher)?;
+        // let axpc = hasher.finalize_reset();
+        // hasher.reset();
+        // std::io::copy(&mut r, &mut hasher)?;
+        // let axcd = hasher.finalize();
+        // let digests = Digests {
+        //     axpc: axpc.into(),
+        //     axcd: axcd.into(),
+        //     axct: axct.into(),
+        //     axbm: axbm.into(),
+        //     ..Default::default()
+        // };
 
-        // sign zip
-        let sig = p7x::p7x(&signer, &digests);
-        let mut zip = Zip::append(path, compress)?;
-        zip.create_file(
-            "AppxSignature.p7x".as_ref(),
-            ZipFileOptions::Compressed,
-            &sig,
-        )?;
-        zip.finish()?;
+        // // sign zip
+        // let sig = p7x::p7x(&signer, &digests);
+        // let mut zip = Zip::append(path, compress)?;
+        // zip.create_file(
+        //     "AppxSignature.p7x".as_ref(),
+        //     ZipFileOptions::Compressed,
+        //     &sig,
+        // )?;
+        // zip.finish()?;
         Ok(())
     }
 }

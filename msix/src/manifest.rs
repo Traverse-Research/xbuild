@@ -29,6 +29,7 @@ pub struct AppxManifest {
     #[serde(default)] // Required, but default is provided by xbuild
     pub dependencies: Dependencies,
     #[serde(default, serialize_with = "serialize_element")]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub capabilities: Vec<Capability>,
     #[serde(default)] // Required, but default is provided by xbuild
     pub applications: Applications,
@@ -79,6 +80,7 @@ pub struct Dependencies {
 #[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
 pub struct Identity {
     pub name: String,
+    #[serde(default)] // Allow default as xbuild will provide the version for you.
     pub version: String,
     pub publisher: String,
     pub processor_architecture: Option<String>,
@@ -93,14 +95,15 @@ pub struct Properties {
     pub display_name: String,
     #[serde(serialize_with = "serialize_element")]
     pub publisher_display_name: String,
-    #[serde(serialize_with = "serialize_element")]
+    #[serde(default = "default_logo", serialize_with = "serialize_element")]
     pub logo: String,
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        serialize_with = "serialize_element"
-    )]
+    #[serde(default, serialize_with = "serialize_element")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
+}
+
+fn default_logo() -> String {
+    String::from("Images/StoreLogo.scale-100.png")
 }
 
 fn serialize_element<S>(value: &impl Serialize, serializer: S) -> Result<S::Ok, S::Error>
@@ -176,21 +179,30 @@ pub enum ApplicationKind {
 }
 
 /// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-application>
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, default, rename_all(serialize = "PascalCase"))]
 pub struct Application {
     pub id: String,
-    // #[serde(flatten)]
-    // pub kind: ApplicationKind,
     pub executable: Option<String>,
     pub entry_point: Option<String>,
-    #[serde(default, rename(serialize = "uap:VisualElements"))]
+    #[serde(rename(serialize = "uap:VisualElements"))]
     pub visual_elements: VisualElements,
 }
 
+impl Default for Application {
+    fn default() -> Self {
+        Self {
+            id: String::from("App"),
+            executable: Default::default(),
+            entry_point: Default::default(),
+            visual_elements: Default::default(),
+        }
+    }
+}
+
 /// <https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-uap-visualelements>
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(deny_unknown_fields, rename_all(serialize = "PascalCase"))]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(deny_unknown_fields, default, rename_all(serialize = "PascalCase"))]
 pub struct VisualElements {
     pub display_name: String,
     pub description: String,
@@ -206,6 +218,22 @@ pub struct VisualElements {
     pub splash_screen: Option<SplashScreen>,
     #[serde(rename(serialize = "uap:LockScreen"))]
     pub lock_screen: Option<LockScreen>,
+}
+
+impl Default for VisualElements {
+    fn default() -> Self {
+        Self {
+            display_name: String::from("Default display name"),
+            description: String::from("Default description"),
+            background_color: String::from("lightGray"),
+            logo_150x150: String::from("Images/Square150x150.scale-100.png"),
+            logo_44x44: String::from("Images/Square44x44.scale-100.png"),
+
+            default_tile: Default::default(),
+            splash_screen: Default::default(),
+            lock_screen: Default::default(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
