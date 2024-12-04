@@ -67,6 +67,48 @@ pub fn build(env: &BuildEnv, libraries: Vec<(Target, PathBuf)>, out: &Path) -> R
         dependencies.push_str(&format!("implementation '{}'\n", dep));
     }
 
+    let opt = env.target().opt();
+    let dex_files = &env.config().android().dexes;
+
+    let dex_file_copy_task = if dex_files.is_empty() {
+        String::new()
+    } else {
+        let from = env
+            .cargo()
+            .package_root()
+            .join(&dex_files[0])
+            .display()
+            .to_string();
+        let into = std::path::PathBuf::from(match opt {
+            Opt::Debug => "debug",
+            Opt::Release | Opt::Profile(_) => "release",
+        })
+        .join(match opt {
+            Opt::Debug => "mergeExtDexDebug",
+            Opt::Release | Opt::Profile(_) => "mergeDexRelease",
+        })
+        .display()
+        .to_string();
+
+        let from = from.replace(r"\", "/");
+        let into = into.replace(r"\", "/");
+
+        let from_name = dex_files[0].file_name().unwrap().to_str().unwrap();
+
+        format!(
+            r#"
+            tasks.register("copyPrecompiledDexFiles", Copy) {{
+                from("{from}") {{
+                    rename "{from_name}", "classes2.dex"
+                }}
+                into("$buildDir/intermediates/dex/{into}")
+            }}
+
+            build.dependsOn copyPrecompiledDexFiles
+            "#
+        )
+    };
+
     let asset_packs = if config.assets.is_empty() {
         ""
     } else {
@@ -94,6 +136,7 @@ pub fn build(env: &BuildEnv, libraries: Vec<(Target, PathBuf)>, out: &Path) -> R
             dependencies {{
                 {dependencies}
             }}
+            {dex_file_copy_task}
         "#,
         package = package,
         target_sdk = target_sdk,
@@ -101,6 +144,7 @@ pub fn build(env: &BuildEnv, libraries: Vec<(Target, PathBuf)>, out: &Path) -> R
         version_code = version_code,
         version_name = version_name,
         dependencies = dependencies,
+        dex_file_copy_task = dex_file_copy_task,
     );
 
     let pack_name = "baseAssets";
@@ -209,7 +253,6 @@ pub fn build(env: &BuildEnv, libraries: Vec<(Target, PathBuf)>, out: &Path) -> R
         std::fs::copy(&lib, lib_dir.join(name))?;
     }
 
-    let opt = env.target().opt();
     let format = env.target().format();
     let mut cmd = Command::new(bat!("gradle"));
     cmd.current_dir(&gradle).arg(match format {
