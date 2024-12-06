@@ -67,6 +67,36 @@ pub fn build(env: &BuildEnv, libraries: Vec<(Target, PathBuf)>, out: &Path) -> R
         dependencies.push_str(&format!("implementation '{}'\n", dep));
     }
 
+    let mut dexes = String::new();
+    for dex in &env.config().android().dexes {
+        let mut path = env.cargo().package_root().join(dex);
+
+        // Pop the filename and use the directory.
+        //
+        // This is needed as we must provide a directory to `DexMergingTask::dexDirs`
+        path.pop();
+
+        let path = path.display().to_string().replace(r"\", r"/");
+
+        let external_lib = format!(r#"task.dexDirs.from("{path}")"#);
+        dexes.push_str(&external_lib);
+        dexes.push_str("\n");
+    }
+
+    let dexes = if !dexes.is_empty() {
+        format!(
+            r#"
+            afterEvaluate {{
+                tasks.named("mergeDexRelease").configure {{ task ->
+                    {dexes}
+                }}
+            }}
+        "#
+        )
+    } else {
+        String::new()
+    };
+
     let asset_packs = if config.assets.is_empty() {
         ""
     } else {
@@ -94,6 +124,8 @@ pub fn build(env: &BuildEnv, libraries: Vec<(Target, PathBuf)>, out: &Path) -> R
             dependencies {{
                 {dependencies}
             }}
+
+            {dexes}
         "#,
         package = package,
         target_sdk = target_sdk,
