@@ -71,6 +71,9 @@ pub fn build(env: &BuildEnv, libraries: Vec<(Target, PathBuf)>, out: &Path) -> R
     for dex in &env.config().android().dexes {
         let mut path = env.cargo().package_root().join(dex);
 
+        // Pop the filename and use the directory.
+        //
+        // This is needed as we must provide a directory to `DexMergingTask::dexDirs`
         path.pop();
 
         let path = path.display().to_string().replace(r"\", r"/");
