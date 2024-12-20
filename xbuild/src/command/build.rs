@@ -98,8 +98,7 @@ pub fn build(env: &BuildEnv) -> Result<()> {
                         .expect("Could not copy lib before stripping its debug symbols");
 
                     std::process::Command::new("strip")
-                        // I'm told this should always be valid for Android, so use this as the target
-                        .arg("--strip-debug")
+                        .arg("--strip-all")
                         .arg(&lib)
                         .spawn()
                         .expect("Could not strip debug symbols from lib")
