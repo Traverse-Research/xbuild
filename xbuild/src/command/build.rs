@@ -99,7 +99,6 @@ pub fn build(env: &BuildEnv) -> Result<()> {
 
                     std::process::Command::new("strip")
                         // I'm told this should always be valid for Android, so use this as the target
-                        .arg("--target=elf64-little")
                         .arg("--strip-debug")
                         .arg(&lib)
                         .spawn()
