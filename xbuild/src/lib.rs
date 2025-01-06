@@ -40,7 +40,7 @@ mod task;
 /// Current NDK version xbuild should use for Android.
 ///
 /// If this version is not available on a users machine xbuild will download it
-/// from our releases: ['https://github.com/Traverse-Research/xbuild/releases'].
+/// from our releases: https://github.com/Traverse-Research/xbuild/releases.
 ///
 /// The actual version used is determined by whatever the "ubuntu-latest" image has installed.
 const ANDROID_NDK_CURRENT: &str = "27.1.12297006";

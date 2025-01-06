@@ -18,8 +18,9 @@ impl Default for Doctor {
                     checks: vec![
                         Check::new("clang", Some(VersionCheck::new("--version", 0, 2))),
                         Check::new("clang++", Some(VersionCheck::new("--version", 0, 2))),
-                        Check::new("llvm-ar", None),
+                        Check::new("llvm-ar", Some(VersionCheck::new("--version", 1, 4))),
                         Check::new("llvm-lib", None),
+                        Check::new("llvm-strip", Some(VersionCheck::new("--version", 2, 4))),
                         Check::new("llvm-readobj", Some(VersionCheck::new("--version", 1, 4))),
                         Check::new("lld", Some(VersionCheck::new("-flavor ld --version", 0, 1))),
                         Check::new("lld-link", Some(VersionCheck::new("--version", 0, 1))),
