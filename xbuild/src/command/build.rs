@@ -97,13 +97,12 @@ pub fn build(env: &BuildEnv) -> Result<()> {
                     std::fs::copy(&lib, unstripped_lib)
                         .expect("Could not copy lib before stripping its debug symbols");
 
-                    std::process::Command::new("strip")
-                        .arg("--strip-all")
-                        .arg(&lib)
-                        .spawn()
-                        .expect("Could not strip debug symbols from lib")
-                        .wait()
-                        .expect("Stripping of debug symbols from lib failed");
+                    let mut cmd = std::process::Command::new("llvm-strip");
+                    cmd.arg(&lib);
+                    let status = cmd
+                        .status()
+                        .with_context(|| format!("Could not run `{cmd:?}`"))?;
+                    ensure!(status.success(), "Failed to strip library using `{cmd:?}`");
                 }
 
                 let ndk = env.android_ndk();
