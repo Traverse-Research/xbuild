@@ -111,8 +111,15 @@ impl Device {
     }
 
     pub fn run(&self, env: &BuildEnv, path: &Path) -> Result<()> {
+        // TODO: Why not pass the entire env.target().format, and/or match on that?
         match &self.backend {
-            Backend::Adb(adb) => adb.run(&self.id, path, &env.config.android().debug, false),
+            Backend::Adb(adb) => adb.run(
+                &self.id,
+                path,
+                env.config.android(),
+                env.target().android_gradle,
+                false,
+            ),
             Backend::Host(host) => host.run(path),
             Backend::Imd(imd) => imd.run(env, &self.id, path),
         }?;

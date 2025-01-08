@@ -176,6 +176,12 @@ impl Config {
             application.activities.push(Activity::default());
         }
 
+        // TODO: This is garbage. If the user added a custom activity at 0, and replicated the
+        // main activity (with correct MAIN+LAUNCHER intent filter) at a later index, this would
+        // overwrite it all.
+        // cargo-apk worked around this by only supporting one `activity` element in the manifest so
+        // far, to which we insert the MAIN+LAUNCHER intent filter if it didn't exist yet:
+        // https://github.com/rust-mobile/cargo-apk/commit/bd3d71f4cf0cea41ab7309270a64c289cfc4f864#diff-9c2f0d812ce52310e2784d3ba203437e6f318230e4e4f701b321a0f656dfa416R46
         let activity = application.activities.get_mut(0).unwrap();
         activity.config_changes.get_or_insert_with(|| {
             [

@@ -66,7 +66,7 @@ impl TaskRunner {
     }
 }
 
-pub fn run(mut command: Command, verbose: bool) -> Result<()> {
+pub fn run(command: &mut Command, verbose: bool) -> Result<()> {
     if !verbose {
         let output = command
             .output()

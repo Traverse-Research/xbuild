@@ -711,6 +711,7 @@ impl BuildEnv {
         let output_dir = if self.target().format().supports_multiarch() {
             self.platform_dir()
         } else {
+            // TODO: This shouldn't pick the first target?
             let target = self.target().compile_targets().next().unwrap();
             self.arch_dir(target.arch())
         };

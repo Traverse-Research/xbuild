@@ -1,8 +1,10 @@
-use crate::config::AndroidDebugConfig;
+use crate::config::{AndroidConfig, AndroidDebugConfig};
 use crate::devices::{Backend, Device};
-use crate::{Arch, Platform};
+use crate::{task, Arch, Platform};
 use anyhow::{Context, Result};
+use apk::res::ResTablePackageHeader;
 use apk::Apk;
+use log::Log;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::{Child, ChildStdout, Command, Stdio};
@@ -111,7 +113,7 @@ impl Adb {
         Ok(std::str::from_utf8(&output.stdout)?.trim().to_string())
     }
 
-    fn install(&self, device: &str, path: &Path) -> Result<()> {
+    fn install(&self, device: &str, path: &Path, is_gradle_aab: bool) -> Result<()> {
         let file_name = path.file_name().unwrap().to_str().unwrap();
         self.push(device, path)?;
         let status = self
@@ -373,20 +375,78 @@ impl Adb {
         &self,
         device: &str,
         path: &Path,
-        debug_config: &AndroidDebugConfig,
+        android_config: &AndroidConfig,
+        // TODO: Why not pass the entire
+        is_gradle_aab: bool,
         debug: bool,
     ) -> Result<()> {
-        let entry_point = Apk::entry_point(path)?;
-        let package = &entry_point.package;
-        let activity = &entry_point.activity;
-        self.stop(device, package)?;
-        if debug {
-            self.set_debug_app(device, package)?;
+        let activity = android_config
+            .manifest
+            .application
+            .activities
+            .iter()
+            .find(|a| {
+                a.intent_filters
+                    .iter()
+                    .any(|i| i.actions.contains("android.intent.action.MAIN"))
+            });
+        let package;
+        let activity;
+
+        if is_gradle_aab {
+            let bundletool = || {
+                let mut bundletool = Command::new("java");
+                bundletool
+                    .arg("-jar")
+                    .arg("~/Downloads/bundletool-all-1.17.2.jar");
+                bundletool
+            };
+            let output = path.with_extension("apks");
+            log::info!("Converting AAB to `{}`", output.display());
+            let build = bundletool()
+                .arg("build-apks")
+                .arg("--adb")
+                .arg(&self.0)
+                .arg("--connected-device") // Optimize for connected device
+                .arg("--device-id")
+                .arg(device)
+                // TODO:
+                // [--key-pass=<key-password>]
+                // [--ks=<path/to/keystore>]
+                // [--ks-key-alias=<key-alias>]
+                // [--ks-pass=<[pass|file]:value>]
+                .arg("--bundle")
+                .arg(path)
+                .arg("--overwrite")
+                .arg("--output")
+                .arg(output);
+            log::trace!("Calling `{build:?}`");
+            task::run(build, false)?;
+            let install = bundletool()
+                .arg("install-apks")
+                .arg("--adb")
+                .arg(&self.0)
+                .arg("--device-id")
+                .arg(device)
+                .arg("--apks")
+                .arg(output);
+            log::trace!("Calling `{install:?}`");
+            task::run(build, false)?;
         } else {
-            self.clear_debug_app(device)?;
+            // TODO: We built the APK, we know this...
+            let entry_point = Apk::entry_point(path)?;
+            package = &entry_point.package;
+            activity = &entry_point.activity;
+            self.stop(device, package)?;
+            if debug {
+                // TODO: Dead code, always false
+                self.set_debug_app(device, package)?;
+            } else {
+                self.clear_debug_app(device)?;
+            }
+            self.install(device, path, is_gradle_aab)?;
         }
-        self.install(device, path)?;
-        self.forward_reverse(device, debug_config)?;
+        self.forward_reverse(device, android_config.debug)?;
         let last_timestamp = self.logcat_last_timestamp(device)?;
         self.start(device, package, activity)?;
         let uid = self.uidof(device, package)?;
