@@ -129,7 +129,17 @@ impl Adb {
     }
 
     /// To run a native activity use "android.app.NativeActivity" as the activity name
-    fn start(&self, device: &str, package: &str, activity: &str) -> Result<()> {
+    fn start(
+        &self,
+        device: &str,
+        package: &str,
+        activity: &str,
+        launch_args: &[String],
+    ) -> Result<()> {
+        // Quote arguments for `am` so that they don't already get parsed by `adb`.
+        let launch_args = shlex::try_join(launch_args.iter().map(String::as_str))
+            .context("Failed to re-quote launch arguments")?;
+
         let status = self
             .shell(device, None)
             .arg("am")
@@ -138,6 +148,7 @@ impl Adb {
             .arg("android.intent.action.MAIN")
             .arg("-n")
             .arg(format!("{}/{}", package, activity))
+            .arg(launch_args)
             .status()?;
         anyhow::ensure!(
             status.success(),
@@ -373,6 +384,7 @@ impl Adb {
         &self,
         device: &str,
         path: &Path,
+        launch_args: &[String],
         debug_config: &AndroidDebugConfig,
         debug: bool,
     ) -> Result<()> {
@@ -388,7 +400,7 @@ impl Adb {
         self.install(device, path)?;
         self.forward_reverse(device, debug_config)?;
         let last_timestamp = self.logcat_last_timestamp(device)?;
-        self.start(device, package, activity)?;
+        self.start(device, package, activity, launch_args)?;
         let uid = self.uidof(device, package)?;
         let logcat = self.logcat(device, uid, &last_timestamp)?;
         for line in logcat {
