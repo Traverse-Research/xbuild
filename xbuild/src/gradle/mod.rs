@@ -80,7 +80,7 @@ pub fn build(env: &BuildEnv, libraries: Vec<(Target, PathBuf)>, out: &Path) -> R
 
         let external_lib = format!(r#"task.dexDirs.from("{path}")"#);
         dexes.push_str(&external_lib);
-        dexes.push_str("\n");
+        dexes.push('\n');
     }
 
     let dexes = if !dexes.is_empty() {
