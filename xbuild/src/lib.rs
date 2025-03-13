@@ -354,7 +354,7 @@ pub struct BuildArgs {
     build_target: BuildTargetArgs,
     #[clap(flatten)]
     cargo: CargoArgs,
-    /// Path to a xbuild `manifest.yaml` to use for this build.
+    /// Path to an xbuild manifest to use for this build, instead of the default `manifest.yaml` in the crate root of the currently selected package.
     #[clap(long)]
     xmanifest_path: Option<std::path::PathBuf>,
     /// Use verbose output
