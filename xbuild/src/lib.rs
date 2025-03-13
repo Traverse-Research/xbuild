@@ -354,6 +354,9 @@ pub struct BuildArgs {
     build_target: BuildTargetArgs,
     #[clap(flatten)]
     cargo: CargoArgs,
+    /// Path to a xbuild `manifest.yaml` to use for this build.
+    #[clap(long)]
+    x_manifest_path: Option<std::path::PathBuf>,
     /// Use verbose output
     #[clap(long, short)]
     verbose: bool,
@@ -646,7 +649,11 @@ impl BuildEnv {
         let build_dir = cargo.target_dir().join("x");
         let cache_dir = dirs::cache_dir().unwrap().join("x");
         let package = cargo.manifest().package.as_ref().unwrap(); // Caller should guarantee that this is a valid package
-        let manifest = cargo.package_root().join("manifest.yaml");
+        let manifest = if let Some(manifest) = args.x_manifest_path {
+            manifest
+        } else {
+            cargo.package_root().join("manifest.yaml")
+        };
         let mut config = Config::parse(manifest)?;
         let build_target = args.build_target.build_target(&config)?;
         config.apply_rust_package(package, cargo.workspace_manifest(), build_target.opt())?;
